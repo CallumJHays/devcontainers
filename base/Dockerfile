@@ -8,7 +8,7 @@ ARG APT_CACHER_NG_PORT=3142
 
 COPY config/apt-proxy-detect.sh /etc/apt/
 RUN \
-    # netcat is needed to run the script
+    # netcat is needed to run the script.
     apt-get update && \
     apt-get install -y netcat && \
     rm -rf /var/lib/apt/lists/* && \
@@ -17,8 +17,8 @@ RUN \
     chmod +x /etc/apt/apt-proxy-detect.sh && \
     \
     # note this relies on `netcat` which must be installed first and is done just above.
-    echo 'Acquire::http::ProxyAutoDetect "/etc/apt/apt-proxy-detect.sh";\n\
-    # passthrough https (dont proxy) - custom deb pkg sources
+    echo 'Acquire::http::Proxy-Auto-Detect "/etc/apt/apt-proxy-detect.sh";\n\
+    # passthrough https (dont proxy) - custom deb pkg sources. Unsure if this works with above.
     Acquire::HTTPS::Proxy "false";\n\
     ' >> /etc/apt/apt.conf.d/30detectproxy
 
@@ -29,14 +29,16 @@ RUN \
     # create user with access to useful groups for development
     useradd --create-home -G sudo,dialout user && \
     \
-    # set empty password - sudo just requires 'enter'. Note this gets altered in the release image
+    # set empty password - sudo doesn't require password
     passwd -d user && \
     \
     # apt-get essentials
     apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" \
     apt-get install -y \
     curl \
     git \
+    software-properties-common \
     sudo \
     tmux \
     wget \
@@ -53,10 +55,10 @@ RUN \
     echo "auth sufficient pam_shells.so\n" > /etc/pam.d/chsh && \
     su user sh -c "chsh -s $(which zsh)" && \
     \
-    # prevent devcontainer folder from being deleted by mistake (hard to recover these)
+    # symlink to prevent devcontainer folder from being deleted by mistake (hard to recover these)
     mkdir /mnt/workspace && \
     ln -s /mnt/workspace /home/user/workspace
 
 WORKDIR /home/user/workspace
-ENTRYPOINT ["zsh", "-c"]
+ENTRYPOINT ["su", "user", "zsh", "-c"]
 CMD ["zsh"]
