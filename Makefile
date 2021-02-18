@@ -6,19 +6,21 @@ BASE_IMG = ubuntu:focal
 # build flag directory
 _BF_DIR = .built_flags
 DOCKERHUB_USER = callumjhays
-PREV_IMG = $(DOCKERHUB_USER)/base_devcontainer
+
+# TODO: stack-chaining
+PREV_IMG = $(DOCKERHUB_USER)/base-devcontainer
 
 $(_BF_DIR)/base: $(wildcard ./base/* ./base/**/*)
-	docker build -t $(DOCKERHUB_USER)/base_devcontainer --build-arg BASE_IMG=$(BASE_IMG) base
+	docker build -t $(DOCKERHUB_USER)/base-devcontainer --build-arg BASE_IMG=$(BASE_IMG) base
 	touch $@
 
 # catch-all for all other image builds
 $(_BF_DIR)/%: $(_BF_DIR)/base $(wildcard ./%/* ./%/**/*)
-	docker build -t $(DOCKERHUB_USER)/$*_devcontainer --build-arg BASE_IMG=$(PREV_IMG) $*
+	docker build -t $(DOCKERHUB_USER)/$*-devcontainer --build-arg BASE_IMG=$(PREV_IMG) $*
 	touch $@
 
 publish-%: %
-	docker push $(DOCKERHUB_USER)/$*_devcontainer
+	docker push $(DOCKERHUB_USER)/$*-devcontainer
 
 %: $(_BF_DIR)/%
 	@echo Updating $@... $^

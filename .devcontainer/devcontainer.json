@@ -1,5 +1,5 @@
 {
-    "image": "docker:dind",
+    "dockerFile": "./Dockerfile",
     "containerEnv": {
         "DOCKER_TLS_CERTDIR": "/certs"
     },
@@ -7,7 +7,7 @@
         "--net=host",
         "--privileged"
     ],
-    "postStartCommand": "nohup dockerd &",
+    "postAttachCommand": "nohup dockerd &",
     "extensions": [
         "ms-azuretools.vscode-docker"
     ]

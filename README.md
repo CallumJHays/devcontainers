@@ -14,7 +14,7 @@ make python3-node
 3. Prepare the project-specific Dockerfile & devcontainer:
 ```Dockerfile
 # ./.devcontainer/Dockerfile
-FROM python3-node-devcontainer as dev
+FROM python3-node-devcontainer
 
 # python deps
 COPY dev-requirements.txt .
@@ -39,7 +39,6 @@ RUN apt-get update && \
 // ./.devcontainer/devcontainer.json
 {
     "dockerfile": "./Dockerfile",
-    "image": "project-devcontainer", // name your project container
     "remoteUser": "user",
     "workspaceFolder": "/home/user/workspace",
     "workspaceMount": "", // TODO
