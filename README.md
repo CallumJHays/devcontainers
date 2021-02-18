@@ -38,11 +38,10 @@ RUN apt-get update && \
 ```jsonc
 // ./.devcontainer/devcontainer.json
 {
-    "dockerfile": "./Dockerfile",
+    "dockerFile": "./Dockerfile",
     "remoteUser": "user",
     "workspaceFolder": "/home/user/workspace",
-    "workspaceMount": "", // TODO
-    "buildArgs": ["--target=dev"]
+    "workspaceMount": "" // TODO
 }
 ```
 
@@ -56,7 +55,10 @@ RUN apt-get update && \
 FROM project-devcontainer as dev
 
 # Create optimized build
-RUN npm run build -o ./optimized
+RUN npm run build ./optimized
+
+# Test the optimized build
+RUN npm run test-build ./optimized
 
 # rebase on lean production image
 FROM python3-node-alpine as prod
