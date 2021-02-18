@@ -5,9 +5,11 @@
     },
     "runArgs": [
         "--net=host",
-        "--privileged"
+        "--privileged",
+        // use parent docker daemon
+        "-v=/var/run/docker.sock:/var/run/docker.sock",
+        "-v=/usr/bin/docker:/usr/bin/docker"
     ],
-    "postAttachCommand": "nohup dockerd &",
     "extensions": [
         "ms-azuretools.vscode-docker"
     ]
