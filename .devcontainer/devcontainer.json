@@ -1,0 +1,14 @@
+{
+    "image": "docker:dind",
+    "containerEnv": {
+        "DOCKER_TLS_CERTDIR": "/certs"
+    },
+    "runArgs": [
+        "--net=host",
+        "--privileged"
+    ],
+    "postStartCommand": "nohup dockerd &",
+    "extensions": [
+        "ms-azuretools.vscode-docker"
+    ]
+}

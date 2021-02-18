@@ -5,7 +5,9 @@ version: '3'
 
 services:
   apt-cacher-ng:
-    image: sameersbn/apt-cacher-ng
+    build:
+      dockerfile: ./apt-cacher.Dockerfile
+      context: .
     container_name: apt-cacher-ng
     ports:
       - "3142:3142"

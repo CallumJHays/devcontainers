@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/bash
+
 # detect-http-proxy - Returns a HTTP proxy which is available for use
 
 # Author: Lekensteyn <lekensteyn@gmail.com>

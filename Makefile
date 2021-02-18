@@ -1,13 +1,24 @@
+.SECONDARY:
+
 # can change this if another image already has the majority of the deps you want
 BASE_IMG = ubuntu:focal
 
-define docker_build
-    docker build -t dc_$(1) $(2) $(1)
-endef
+# build flag directory
+_BF_DIR = .built_flags
+DOCKERHUB_USER = callumjhays
+PREV_IMG = $(DOCKERHUB_USER)/base_devcontainer
 
-dc_base: $(wildcard base/*)
-	docker build -t dc_base --build-arg BASE_IMG=$(BASE_IMG) base
+$(_BF_DIR)/base: $(wildcard ./base/* ./base/**/*)
+	docker build -t $(DOCKERHUB_USER)/base_devcontainer --build-arg BASE_IMG=$(BASE_IMG) base
+	touch $@
 
-# catch-all for all other builds
-dc_%: dc_base $(wildcard %/**/*)
-	$(call docker_build,$*)
+# catch-all for all other image builds
+$(_BF_DIR)/%: $(_BF_DIR)/base $(wildcard ./%/* ./%/**/*)
+	docker build -t $(DOCKERHUB_USER)/$*_devcontainer --build-arg BASE_IMG=$(PREV_IMG) $*
+	touch $@
+
+publish-%: %
+	docker push $(DOCKERHUB_USER)/$*_devcontainer
+
+%: $(_BF_DIR)/%
+	@echo Updating $@... $^

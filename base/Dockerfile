@@ -1,21 +1,36 @@
 ARG BASE_IMG=ubuntu:focal
 FROM ${BASE_IMG}
 
-ARG USERNAME=user
 ARG APT_CACHER_NG_PORT=3142
 
-# setup apt-cacher-ng compatability
-COPY config/apt-proxy-detect.sh /etc/apt/
-RUN apt-get update && \
-    # netcat is used by the above script
-    apt-get install -y netcat && \
-    rm -rf /var/lib/apt/lists/*
+###############################################################
+# APT-CACHER SETUP
 
-# create user with access to useful groups for development
-RUN useradd --create-home -G sudo,dialout ${USERNAME} && \
+COPY config/apt-proxy-detect.sh /etc/apt/
+RUN \
+    # netcat is needed to run the script
+    apt-get update && \
+    apt-get install -y netcat && \
+    rm -rf /var/lib/apt/lists/* && \
+    \
+    # make the script executable
+    chmod +x /etc/apt/apt-proxy-detect.sh && \
+    \
+    # note this relies on `netcat` which must be installed first and is done just above.
+    echo 'Acquire::http::ProxyAutoDetect "/etc/apt/apt-proxy-detect.sh";\n\
+    # passthrough https (dont proxy) - custom deb pkg sources
+    Acquire::HTTPS::Proxy "false";\n\
+    ' >> /etc/apt/apt.conf.d/30detectproxy
+
+###############################################################
+# DEV ENV SETUP
+
+RUN \
+    # create user with access to useful groups for development
+    useradd --create-home -G sudo,dialout user && \
     \
     # set empty password - sudo just requires 'enter'. Note this gets altered in the release image
-    passwd -d ${USERNAME} && \
+    passwd -d user && \
     \
     # apt-get essentials
     apt-get update && \
@@ -23,25 +38,25 @@ RUN useradd --create-home -G sudo,dialout ${USERNAME} && \
     curl \
     git \
     sudo \
-    tumx \
+    tmux \
     wget \
     zsh && \
     rm -rf /var/lib/apt/lists/* && \
     \
-    # allow optional apt-cache proxy to speed up docker rebuilds the 172 address is THE dockerhost address
-    # note this relies on `netcat` which must be installed first and is done just above.
-    echo 'Acquire::http { Proxy "/etc/apt/apt-proxy-detect.sh"; };' >> /etc/apt/apt.conf.d/01proxy && \
-    \
     # install ohmyzsh
-    su ${USERNAME} sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+    su user sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
     \
     # install p10k as ohmyzsh plugin
-    su ${USERNAME} sh -c "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-/home/${USERNAME}/.oh-my-zsh/custom}/themes/powerlevel10k" && \
+    su user sh -c "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-/home/user/.oh-my-zsh/custom}/themes/powerlevel10k" && \
     \
     # change default shell for user (leave root so sudo login is obvious)
-    echo "auth sufficient pam_rootok.so\n" > /etc/pam.d/chsh && \
-    su ${USERNAME} sh -c "chsh -s $(which zsh)"
+    echo "auth sufficient pam_shells.so\n" > /etc/pam.d/chsh && \
+    su user sh -c "chsh -s $(which zsh)" && \
+    \
+    # prevent devcontainer folder from being deleted by mistake (hard to recover these)
+    mkdir /mnt/workspace && \
+    ln -s /mnt/workspace /home/user/workspace
 
-
-# makes '${USERNAME}' the default user on login.
-ONBUILD USER ${USERNAME}
+WORKDIR /home/user/workspace
+ENTRYPOINT ["zsh", "-c"]
+CMD ["zsh"]
