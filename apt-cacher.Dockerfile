@@ -1,4 +1,6 @@
 # https://docs.docker.com/engine/examples/apt-cacher-ng/
+# Another one I tried on dockerhub was somehow full of issues which I couldn't debug.
+# This image works phenomenally though
 FROM ubuntu:focal
 
 VOLUME ["/var/cache/apt-cacher-ng"]
