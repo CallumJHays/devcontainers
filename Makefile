@@ -19,10 +19,9 @@ DOCKER_BUILD = docker build
 
 
 .built-flags/base: .built-flags $(wildcard ./base/* ./base/**/*)
-	$(DOCKER_BUILD) \
+	$(DOCKER_BUILD) base  \
 		-t $(DOCKERHUB_USER)/base-devcontainer \
-		--build-arg BASE_IMG=$(CORE_IMG) \
-		base
+		--build-arg BASE_IMG=$(CORE_IMG)
 	touch $@
 
 
@@ -33,21 +32,20 @@ DOCKER_BUILD = docker build
 .built-flags/$(BUILD_PREFIX)%: .built-flags/base $(wildcard ./$(BUILD_PREFIX)%/* ./$(BUILD_PREFIX)%/**/*)
 	# if the target includes a "-"
 	BUILD_PREFIX=$(BUILD_PREFIX); \
+	TARGET=$*; \
 	if echo "$*" | grep -q "-"; then \
 		\
-		IMG_HEIRARCHY=$$(echo "$*" | tr - " "); \
+		IMG_HEIRARCHY=$$(echo "$${TARGET}" | tr - " "); \
 		\
 		for IMG in $${IMG_HEIRARCHY}; do \
 			$(MAKE) .built-flags/$${BUILD_PREFIX}$${IMG} BUILD_PREFIX=$${BUILD_PREFIX}; \
-			BASE_IMG=$(DOCKERHUB_USER)/$${IMG_CHAIN}-devcontainer; \
 			BUILD_PREFIX=$${BUILD_PREFIX}$${IMG}-; \
 		done; \
 	\
 	else \
-		$(DOCKER_BUILD) \
-			-t $(DOCKERHUB_USER)/$(BUILD_PREFIX)$*-devcontainer \
-			--build-arg BASE_IMG=$(DOCKERHUB_USER)/$${BUILD_PREFIX:-base-}devcontainer \
-			$*; \
+		$(DOCKER_BUILD) $${TARGET} \
+			-t $(DOCKERHUB_USER)/$(BUILD_PREFIX)$${TARGET}-devcontainer \
+			--build-arg BASE_IMG=$(DOCKERHUB_USER)/$${BUILD_PREFIX:-base-}devcontainer; \
 	fi;
 	
 	touch $@
@@ -64,9 +62,9 @@ ci-publish-%:
 	# buildx is hard-coded to retrieve metadata from a registry server.
 	# so, sadly the --push flag is necessary
 	$(MAKE) $* DOCKER_BUILD="docker buildx build \
-		--cache-from "type=local,src=/tmp/.buildx-cache/" \
-		--cache-to "type=local,dest=/tmp/.buildx-cache/" \
-		--push"
+			--cache-from type=local,src=/tmp/.buildx-cache/$${BUILD_PREFIX}devcontainer \
+			--cache-to type=local,dest=/tmp/.buildx-cache/$${TARGET} \
+			--push"
 
 
 # sometimes "make Makefile" gets sent or something?? this catches that

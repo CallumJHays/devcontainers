@@ -13,7 +13,7 @@ make python3-node
 
 3. Prepare the project-specific Dockerfile & devcontainer:
 ```Dockerfile
-# ./.devcontainer/Dockerfile
+# ./Dockerfile
 FROM callumjhays/python3-node-devcontainer
 
 # python deps
@@ -53,6 +53,7 @@ RUN apt-get update && \
 ```Dockerfile
 # ./Dockerfile
 FROM project-devcontainer as dev
+# OR, just include it all in this one file as a multi-stage build (preferred)
 
 # Create optimized build
 RUN npm run build ./optimized
