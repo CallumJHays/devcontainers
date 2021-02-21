@@ -19,7 +19,7 @@ DOCKER_BUILD = docker build
 
 
 .built-flags/base: .built-flags $(wildcard ./base/* ./base/**/*)
-	docker build \
+	$(DOCKER_BUILD) \
 		-t $(DOCKERHUB_USER)/base-devcontainer \
 		--build-arg BASE_IMG=$(CORE_IMG) \
 		base
