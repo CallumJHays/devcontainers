@@ -14,7 +14,7 @@ make python3-node
 3. Prepare the project-specific Dockerfile & devcontainer:
 ```Dockerfile
 # ./.devcontainer/Dockerfile
-FROM python3-node-devcontainer
+FROM callumjhays/python3-node-devcontainer
 
 # python deps
 COPY dev-requirements.txt .
@@ -32,7 +32,7 @@ RUN apt-get update && \
     xargs -a dev-packages.txt | apt-get install -y && \
     rm -rf /var/lib/apt/lists/* && \
     npm install && \
-    pip install -r pip-requirements.txt -r pip-dev-requirements.txt
+    pip install -r requirements.txt -r dev-requirements.txt
 ```
 
 ```jsonc
