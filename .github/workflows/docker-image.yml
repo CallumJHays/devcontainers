@@ -39,4 +39,4 @@ jobs:
       run: |
         make ci-publish-python && \
         make ci-publish-node && \
-        make ci-publish-python-node
+        make ci-publish-node-python
