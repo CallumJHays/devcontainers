@@ -5,6 +5,9 @@ ARG VERSION=3.10
 
 RUN add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
+    # uninstall default python that comes with ubuntu
+    apt-get purge -y python3.8 && \
+    apt-get autoremove -y python3.8 && \
     apt-get install -y python${VERSION} python${VERSION}-distutils && \
     rm -rf /var/lib/apt/lists/* && \
     # use python${VERSION} as the default python

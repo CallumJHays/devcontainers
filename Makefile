@@ -18,7 +18,7 @@ USE_BUILDX = false
 	mkdir .built-flags
 
 
-.built-flags/base: .built-flags $(wildcard ./base/* ./base/**/*)
+.built-flags/base: .built-flags $(wildcard base/* base/**/*)
 	DOCKER_BUILD="docker build --pull"; \
 	if [ "$${USE_BUILDX}" = "true" ]; then \
 		DOCKER_BUILD="docker buildx build \
@@ -37,7 +37,7 @@ USE_BUILDX = false
 # iterate through the target name segments eg "rust-python3.10-node11"
 # and build ech image passing the previous in as it's $BASE_IMG
 # ie: (base -> rust -> rust-python3.10 -> rust-python3.10-node11)-devcontainer
-.built-flags/$(BUILD_PREFIX)%: .built-flags/base $(wildcard ./$(BUILD_PREFIX)%/* ./$(BUILD_PREFIX)%/**/*)
+.built-flags/$(BUILD_PREFIX)%: .built-flags/base $(wildcard $(BUILD_PREFIX)%/* $(BUILD_PREFIX)%/**/*)
 	# if the target includes a "-"
 	@BUILD_PREFIX=$(BUILD_PREFIX); \
 	TARGET=$*; \
