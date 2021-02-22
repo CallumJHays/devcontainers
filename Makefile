@@ -10,16 +10,24 @@ BUILD_PREFIX =
 # change to your own dockerhub host if you want
 DOCKERHUB_USER = callumjhays
 
-# reset by ci-publish-xxx
-DOCKER_BUILD = docker build
-
+# buildx for cache that can be saved to fs as build artifact
+# speeds up CI builds 
+USE_BUILDX = false
 
 .built-flags:
 	mkdir .built-flags
 
 
 .built-flags/base: .built-flags $(wildcard ./base/* ./base/**/*)
-	$(DOCKER_BUILD) base  \
+	DOCKER_BUILD="docker build"; \
+	if [ "$${USE_BUILDX}" = "true" ]; then \
+		DOCKER_BUILD="docker buildx build \
+		--cache-from type=local,src=/tmp/.buildx-cache/$${BUILD_PREFIX:-base-}devcontainer \
+		--cache-to type=local,dest=/tmp/.buildx-cache/$${BUILD_PREFIX}$${TARGET}-devcontainer \
+		--push"; \
+	fi; \
+	\
+	$${DOCKER_BUILD} base  \
 		-t $(DOCKERHUB_USER)/base-devcontainer \
 		--build-arg BASE_IMG=$(CORE_IMG)
 	touch $@
@@ -43,7 +51,15 @@ DOCKER_BUILD = docker build
 		done; \
 	\
 	else \
-		$(DOCKER_BUILD) $${TARGET} \
+		DOCKER_BUILD="docker build"; \
+		if [ "$${USE_BUILDX}" = "true" ]; then \
+			DOCKER_BUILD="docker buildx build \
+			--cache-from type=local,src=/tmp/.buildx-cache/$${BUILD_PREFIX:-base-}devcontainer \
+			--cache-to type=local,dest=/tmp/.buildx-cache/$${BUILD_PREFIX}$${TARGET}-devcontainer \
+			--push"; \
+		fi; \
+		\
+		$${DOCKER_BUILD} $${TARGET} \
 			-t $(DOCKERHUB_USER)/$(BUILD_PREFIX)$${TARGET}-devcontainer \
 			--build-arg BASE_IMG=$(DOCKERHUB_USER)/$${BUILD_PREFIX:-base-}devcontainer; \
 	fi;
@@ -61,10 +77,7 @@ ci-publish-%:
 
 	# buildx is hard-coded to retrieve metadata from a registry server.
 	# so, sadly the --push flag is necessary
-	$(MAKE) $* DOCKER_BUILD="docker buildx build \
-			--cache-from type=local,src=/tmp/.buildx-cache/$${BUILD_PREFIX}devcontainer \
-			--cache-to type=local,dest=/tmp/.buildx-cache/$${TARGET} \
-			--push"
+	$(MAKE) $* USE_BUILDX=true
 
 
 # sometimes "make Makefile" gets sent or something?? this catches that
@@ -73,4 +86,4 @@ Makefile:
 
 # shorthand niceness
 %: .built-flags/%
-	@echo
+	@echo updating $*
